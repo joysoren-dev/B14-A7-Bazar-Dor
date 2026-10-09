@@ -16,7 +16,7 @@ function useBanglaDate() {
           month: "long",
           year: "numeric",
           timeZone: "Asia/Dhaka",
-        }).format(new Date())
+        }).format(new Date()),
       );
     };
 
@@ -30,7 +30,7 @@ function useBanglaDate() {
 }
 
 function formatPrice(price) {
-  return Number(price).toLocaleString("bn-BD");
+  return Number(price || 0).toLocaleString("bn-BD");
 }
 
 function getUnit(unit) {
@@ -64,17 +64,17 @@ function ProductCard({ product }) {
           <h3 className="truncate font-semibold text-[#26352b]">
             {product.nameBn}
           </h3>
-          <p className="text-xs text-[#68756b]">
-            {getUnit(product.unit)}
-          </p>
+
+          <p className="text-xs text-[#68756b]">{getUnit(product.unit)}</p>
         </div>
       </div>
 
       <div className="mt-3 flex items-end justify-between gap-2">
         <div>
           <p className="text-xs text-[#748074]">আজকের দাম</p>
+
           <p className="mt-0.5 font-bold text-[#26352b]">
-            ৳{formatPrice(product.today)}
+            {formatPrice(product.today)} টাকা
           </p>
         </div>
 
@@ -88,8 +88,7 @@ function ProductCard({ product }) {
                   : "bg-gray-100 text-gray-600"
             }`}
           >
-            {isUp ? "▲" : isDown ? "▼" : "—"}{" "}
-            {formatPrice(percentage)}%
+            {isUp ? "▲" : isDown ? "▼" : "—"} {formatPrice(percentage)}%
           </span>
         )}
       </div>
@@ -102,12 +101,11 @@ function ProductSection({ title, products, direction }) {
     <section className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
       <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-[#26352b] sm:text-2xl">
         <span
-          className={
-            direction === "down" ? "text-[#218653]" : "text-[#df4141]"
-          }
+          className={direction === "down" ? "text-[#218653]" : "text-[#df4141]"}
         >
           {direction === "down" ? "▼" : "▲"}
         </span>
+
         {title}
       </h2>
 
@@ -134,7 +132,7 @@ export default function Home() {
         setError("");
 
         const response = await fetch(
-          "https://api.api-store.workers.dev/api/bazardor/products"
+          "https://api.api-store.workers.dev/api/bazardor/products",
         );
 
         if (!response.ok) {
@@ -212,13 +210,12 @@ export default function Home() {
 
       {loading ? (
         <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <p className="text-center text-[#68756b]">
-            পণ্যের দাম লোড হচ্ছে...
-          </p>
+          <p className="text-center text-[#68756b]">পণ্যের দাম লোড হচ্ছে...</p>
         </section>
       ) : error ? (
         <section className="mx-auto max-w-6xl px-4 py-8 text-center sm:px-6">
           <p className="text-red-600">{error}</p>
+
           <button
             onClick={() => window.location.reload()}
             className="mt-3 rounded-lg bg-[#078b43] px-4 py-2 text-white"
