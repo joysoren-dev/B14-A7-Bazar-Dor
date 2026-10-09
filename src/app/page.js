@@ -4,75 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const risingProducts = [
-  {
-    name: "পেঁয়াজ",
-    emoji: "🧅",
-    unit: "প্রতি কেজি",
-    price: "৫৪",
-    change: "২.৫%",
-  },
-  { name: "আদা", emoji: "🫚", unit: "প্রতি কেজি", price: "৮৫", change: "১.৯%" },
-  {
-    name: "বেগুন",
-    emoji: "🍆",
-    unit: "প্রতি কেজি",
-    price: "৪৪",
-    change: "৪.৮%",
-  },
-  {
-    name: "কই মাছ",
-    emoji: "🐟",
-    unit: "প্রতি কেজি",
-    price: "৪৮০",
-    change: "১.৫%",
-  },
-  { name: "ডিম", emoji: "🥚", unit: "প্রতি ডজন", price: "১৬৫", change: "০.৮%" },
-  {
-    name: "মাখন (১০০ গ্রাম)",
-    emoji: "🧈",
-    unit: "প্রতি পিস",
-    price: "২৭৫",
-    change: "০.৬%",
-  },
-];
-
-const fallingProducts = [
-  { name: "আলু", emoji: "🥔", unit: "প্রতি কেজি", price: "৩৫", change: "৩.০%" },
-  { name: "শসা", emoji: "🥒", unit: "প্রতি কেজি", price: "৪০", change: "২.৫%" },
-  {
-    name: "পেঁপে",
-    emoji: "🍈",
-    unit: "প্রতি কেজি",
-    price: "৪৫",
-    change: "২.০%",
-  },
-  {
-    name: "গাজর",
-    emoji: "🥕",
-    unit: "প্রতি কেজি",
-    price: "৬০",
-    change: "১.৮%",
-  },
-  { name: "কলা", emoji: "🍌", unit: "প্রতি ডজন", price: "৮০", change: "১.৫%" },
-  {
-    name: "লেবু",
-    emoji: "🍋",
-    unit: "প্রতি হালি",
-    price: "৩০",
-    change: "১.২%",
-  },
-];
-
-const allProducts = [
-  { name: "চাল", emoji: "🍚", unit: "প্রতি কেজি", price: "৬৫" },
-  { name: "মসুর ডাল", emoji: "🫘", unit: "প্রতি কেজি", price: "১৩০" },
-  { name: "সয়াবিন তেল", emoji: "🫗", unit: "প্রতি লিটার", price: "১৭৫" },
-  { name: "পেঁয়াজ", emoji: "🧅", unit: "প্রতি কেজি", price: "৫৪" },
-  { name: "আলু", emoji: "🥔", unit: "প্রতি কেজি", price: "৩৫" },
-  { name: "ডিম", emoji: "🥚", unit: "প্রতি ডজন", price: "১৬৫" },
-];
-
 function useBanglaDate() {
   const [date, setDate] = useState("");
 
@@ -85,7 +16,7 @@ function useBanglaDate() {
           month: "long",
           year: "numeric",
           timeZone: "Asia/Dhaka",
-        }).format(new Date()),
+        }).format(new Date())
       );
     };
 
@@ -98,22 +29,44 @@ function useBanglaDate() {
   return date;
 }
 
-function ProductCard({ product, falling = false }) {
+function formatPrice(price) {
+  return Number(price).toLocaleString("bn-BD");
+}
+
+function getUnit(unit) {
+  const units = {
+    kg: "প্রতি কেজি",
+    dozen: "প্রতি ডজন",
+    litre: "প্রতি লিটার",
+    piece: "প্রতি পিস",
+    gram: "প্রতি গ্রাম",
+  };
+
+  return units[unit] || `প্রতি ${unit}`;
+}
+
+function ProductCard({ product }) {
+  const isUp = product.change?.dir === "up";
+  const isDown = product.change?.dir === "down";
+  const percentage = Math.abs(product.change?.pct || 0);
+
   return (
     <Link
-      href={`/product/${encodeURIComponent(product.name)}`}
+      href={`/product/${product.slug}`}
       className="flex min-w-0 flex-col rounded-2xl border border-[#e0e8df] bg-[#fafcfb] p-4 transition hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#eff4ee] text-2xl">
-          {product.emoji}
+          {product.image || product.categoryIcon || "🛒"}
         </div>
 
         <div className="min-w-0">
           <h3 className="truncate font-semibold text-[#26352b]">
-            {product.name}
+            {product.nameBn}
           </h3>
-          <p className="text-xs text-[#68756b]">{product.unit}</p>
+          <p className="text-xs text-[#68756b]">
+            {getUnit(product.unit)}
+          </p>
         </div>
       </div>
 
@@ -121,19 +74,22 @@ function ProductCard({ product, falling = false }) {
         <div>
           <p className="text-xs text-[#748074]">আজকের দাম</p>
           <p className="mt-0.5 font-bold text-[#26352b]">
-            ৳{product.price} <span className="text-sm font-normal">টাকা</span>
+            ৳{formatPrice(product.today)}
           </p>
         </div>
 
         {product.change && (
           <span
             className={`rounded-full px-2 py-1 text-xs font-semibold ${
-              falling
-                ? "bg-[#e7f5eb] text-[#218653]"
-                : "bg-[#fff0ee] text-[#d94c4c]"
+              isUp
+                ? "bg-[#fff0ee] text-[#d94c4c]"
+                : isDown
+                  ? "bg-[#e7f5eb] text-[#218653]"
+                  : "bg-gray-100 text-gray-600"
             }`}
           >
-            {falling ? "▼" : "▲"} {product.change}
+            {isUp ? "▲" : isDown ? "▼" : "—"}{" "}
+            {formatPrice(percentage)}%
           </span>
         )}
       </div>
@@ -141,19 +97,23 @@ function ProductCard({ product, falling = false }) {
   );
 }
 
-function ProductSection({ title, products, falling = false }) {
+function ProductSection({ title, products, direction }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
       <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-[#26352b] sm:text-2xl">
-        <span className={falling ? "text-[#218653]" : "text-[#df4141]"}>
-          {falling ? "▼" : "▲"}
+        <span
+          className={
+            direction === "down" ? "text-[#218653]" : "text-[#df4141]"
+          }
+        >
+          {direction === "down" ? "▼" : "▲"}
         </span>
         {title}
       </h2>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
-          <ProductCard key={product.name} product={product} falling={falling} />
+          <ProductCard key={product.id} product={product} />
         ))}
       </div>
     </section>
@@ -163,13 +123,57 @@ function ProductSection({ title, products, falling = false }) {
 export default function Home() {
   const banglaDate = useBanglaDate();
 
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(
+          "https://api.api-store.workers.dev/api/bazardor/products"
+        );
+
+        if (!response.ok) {
+          throw new Error("পণ্যের তথ্য লোড করা যায়নি।");
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error("API থেকে সঠিক পণ্যের তালিকা পাওয়া যায়নি।");
+        }
+
+        setProducts(data);
+      } catch (err) {
+        console.error("Product API error:", err);
+        setError("পণ্যের তথ্য লোড করা যায়নি। আবার চেষ্টা করো।");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
+
+  const risingProducts = products
+    .filter((product) => product.change?.dir === "up")
+    .sort((a, b) => (b.change?.pct || 0) - (a.change?.pct || 0))
+    .slice(0, 6);
+
+  const fallingProducts = products
+    .filter((product) => product.change?.dir === "down")
+    .sort((a, b) => (a.change?.pct || 0) - (b.change?.pct || 0))
+    .slice(0, 6);
+
   return (
     <div className="min-h-full bg-[#f0f5f0]">
-      {/* Hero section */}
       <section className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-6">
         <div className="grid items-center gap-4 rounded-3xl border border-[#e0e9e0] bg-[#fafcfb] px-4 py-6 sm:px-8 sm:py-8 md:grid-cols-[1.5fr_0.8fr] md:px-4 lg:min-h-[258px]">
           <div>
-            {/* Reference image-er moto date badge */}
             {banglaDate && (
               <p className="mb-3 inline-flex rounded-full bg-[#e1f2e7] px-3 py-1.5 text-xs font-medium text-[#168044]">
                 {banglaDate}
@@ -206,22 +210,58 @@ export default function Home() {
         </div>
       </section>
 
-      <ProductSection title="আজ দাম বেড়েছে" products={risingProducts} />
+      {loading ? (
+        <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+          <p className="text-center text-[#68756b]">
+            পণ্যের দাম লোড হচ্ছে...
+          </p>
+        </section>
+      ) : error ? (
+        <section className="mx-auto max-w-6xl px-4 py-8 text-center sm:px-6">
+          <p className="text-red-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 rounded-lg bg-[#078b43] px-4 py-2 text-white"
+          >
+            আবার চেষ্টা করুন
+          </button>
+        </section>
+      ) : (
+        <>
+          <ProductSection
+            title="আজ দাম বেড়েছে"
+            products={risingProducts}
+            direction="up"
+          />
 
-      <ProductSection title="আজ দাম কমেছে" products={fallingProducts} falling />
+          <ProductSection
+            title="আজ দাম কমেছে"
+            products={fallingProducts}
+            direction="down"
+          />
 
-      <section
-        id="সব-পণ্য"
-        className="mx-auto max-w-6xl scroll-mt-40 px-4 py-5 pb-12 sm:px-6"
-      >
-        <h2 className="mb-4 text-2xl font-bold text-[#26352b]">সব পণ্য</h2>
+          <section
+            id="সব-পণ্য"
+            className="mx-auto max-w-6xl scroll-mt-40 px-4 py-5 pb-12 sm:px-6"
+          >
+            <h2 className="mb-4 text-2xl font-bold text-[#26352b]">
+              সব পণ্য ({products.length})
+            </h2>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {allProducts.map((product) => (
-            <ProductCard key={product.name} product={product} />
-          ))}
-        </div>
-      </section>
+            {products.length === 0 ? (
+              <p className="text-[#68756b]">
+                বর্তমানে কোনো পণ্যের তথ্য পাওয়া যায়নি।
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }
