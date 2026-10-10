@@ -15,6 +15,24 @@ export default function SigninPage() {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState("");
 
+  // Ekhane native validation message Banglay deya hocche.
+  function handleBanglaValidation(e) {
+    const input = e.currentTarget;
+
+    if (input.validity.valueMissing) {
+      input.setCustomValidity("এই ঘরটি পূরণ করুন।");
+    } else if (input.validity.typeMismatch && input.type === "email") {
+      input.setCustomValidity("সঠিক ইমেইল ঠিকানা লিখুন।");
+    } else {
+      input.setCustomValidity("");
+    }
+  }
+
+  // Ekhane abar lekha shuru korle purono validation message muche jabe.
+  function clearBanglaValidation(e) {
+    e.currentTarget.setCustomValidity("");
+  }
+
   async function handleSignin(e) {
     e.preventDefault();
     setLoading(true);
@@ -30,7 +48,7 @@ export default function SigninPage() {
         return;
       }
 
-      toast.success("সফলভাবে সাইন ইন হয়েছে!");
+      toast.success("সাইন ইন সফল হয়েছে!");
       router.push("/");
       router.refresh();
     } catch {
@@ -73,6 +91,7 @@ export default function SigninPage() {
       <div className="mx-auto max-w-md">
         <header className="mb-5 text-center">
           <h1 className="text-2xl font-bold text-[#202820]">সাইন ইন করুন</h1>
+
           <p className="mt-2 text-sm text-[#778177]">
             আপনার অ্যাকাউন্টে লগইন করে সব বিস্তারিত দাম দেখুন।
           </p>
@@ -84,6 +103,7 @@ export default function SigninPage() {
               <label htmlFor="email" className={labelClass}>
                 ইমেইল
               </label>
+
               <input
                 id="email"
                 type="email"
@@ -91,6 +111,8 @@ export default function SigninPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onInvalid={handleBanglaValidation}
+                onInput={clearBanglaValidation}
                 placeholder="you@example.com"
                 className={inputClass}
               />
@@ -100,6 +122,7 @@ export default function SigninPage() {
               <label htmlFor="password" className={labelClass}>
                 পাসওয়ার্ড
               </label>
+
               <input
                 id="password"
                 type="password"
@@ -107,6 +130,8 @@ export default function SigninPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onInvalid={handleBanglaValidation}
+                onInput={clearBanglaValidation}
                 placeholder="আপনার পাসওয়ার্ড লিখুন"
                 className={inputClass}
               />
@@ -123,7 +148,9 @@ export default function SigninPage() {
 
           <div className="my-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-[#e1e7df]" />
+
             <span className="text-xs font-medium text-[#536057]">অথবা</span>
+
             <div className="h-px flex-1 bg-[#e1e7df]" />
           </div>
 
@@ -135,6 +162,7 @@ export default function SigninPage() {
               className={socialButtonClass}
             >
               <FcGoogle size={16} className="shrink-0" aria-hidden="true" />
+
               <span>
                 {socialLoading === "google"
                   ? "অপেক্ষা করুন..."
@@ -153,6 +181,7 @@ export default function SigninPage() {
                 className="shrink-0 text-[#202020]"
                 aria-hidden="true"
               />
+
               <span>
                 {socialLoading === "github"
                   ? "অপেক্ষা করুন..."

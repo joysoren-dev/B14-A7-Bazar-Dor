@@ -1,6 +1,7 @@
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import { Suspense } from "react";
+import { Toaster } from "react-hot-toast";
 
 export const metadata = {
   title: "বাজার দর | প্রতিদিনের বাজারের দাম",
@@ -25,6 +26,33 @@ export default function RootLayout({ children }) {
             <p>সকল দাম সর্বশেষ; বাজার অবস্থার উপর নির্ভর করে পরিবর্তিত হয়।</p>
           </div>
         </footer>
+
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 3000,
+            success: {
+              style: {
+                background: "#e8f3e9",
+                color: "#218653",
+                border: "1px solid #218653",
+                fontWeight: "600",
+              },
+              iconTheme: {
+                primary: "#218653",
+                secondary: "#ffffff",
+              },
+            },
+            error: {
+              style: {
+                background: "#fff0f0",
+                color: "#c62828",
+                border: "1px solid #c62828",
+                fontWeight: "600",
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );

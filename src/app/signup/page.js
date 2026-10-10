@@ -18,6 +18,26 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState("");
 
+  // Ekhane native validation message Banglay deya hocche.
+  function handleBanglaValidation(e) {
+    const input = e.currentTarget;
+
+    if (input.validity.valueMissing) {
+      input.setCustomValidity("এই ঘরটি পূরণ করুন।");
+    } else if (input.validity.typeMismatch && input.type === "email") {
+      input.setCustomValidity("সঠিক ইমেইল ঠিকানা লিখুন।");
+    } else if (input.validity.tooShort) {
+      input.setCustomValidity("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
+    } else {
+      input.setCustomValidity("");
+    }
+  }
+
+  // Ekhane input-e abar lekha shuru korle purono validation message muche jabe.
+  function clearBanglaValidation(e) {
+    e.currentTarget.setCustomValidity("");
+  }
+
   async function handleSignup(e) {
     e.preventDefault();
 
@@ -45,7 +65,7 @@ export default function SignupPage() {
         return;
       }
 
-      toast.success("অ্যাকাউন্ট তৈরি হয়েছে! এবার সাইন ইন করুন।");
+      toast.success("সাইন আপ সফল হয়েছে!");
       router.push("/signin");
     } catch {
       toast.error("অ্যাকাউন্ট তৈরি করা যায়নি। আবার চেষ্টা করুন।");
@@ -109,6 +129,8 @@ export default function SignupPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onInvalid={handleBanglaValidation}
+                onInput={clearBanglaValidation}
                 placeholder="যেমন: রহিম উদ্দিন"
                 className={inputClass}
               />
@@ -126,6 +148,8 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onInvalid={handleBanglaValidation}
+                onInput={clearBanglaValidation}
                 placeholder="you@example.com"
                 className={inputClass}
               />
@@ -144,6 +168,8 @@ export default function SignupPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onInvalid={handleBanglaValidation}
+                onInput={clearBanglaValidation}
                 placeholder="কমপক্ষে ৮ অক্ষর"
                 className={inputClass}
               />
@@ -161,6 +187,8 @@ export default function SignupPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                onInvalid={handleBanglaValidation}
+                onInput={clearBanglaValidation}
                 placeholder="আবার লিখুন"
                 className={inputClass}
               />
