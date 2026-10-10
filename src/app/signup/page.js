@@ -223,7 +223,7 @@ export default function SignupPage() {
             অ্যাকাউন্ট আছে?{" "}
             <Link
               href="/signin"
-              className="font-bold text-[#078b43] hover:text-[#056b32] hover:underline"
+              className="font-bold !text-[#078b43] hover:!text-[#056b32] hover:underline"
             >
               সাইন ইন করুন
             </Link>
