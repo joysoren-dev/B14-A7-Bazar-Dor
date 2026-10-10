@@ -2,7 +2,7 @@
 import { Suspense, use, useEffect, useState } from "react";
 import Link from "next/link";
 
-const API_URL = "https://api.api-store.workers.dev/api/bazardor";
+const API_URL = "https://api.abcz.workers.dev/api/bazardor";
 
 const categories = {
   chal: { name: "চাল", icon: "🍚", apiSlug: "chal" },
