@@ -1,9 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { Suspense, use, useEffect, useState } from "react";
 
 const API_URL = "https://api.api-store.workers.dev/api/bazardor/products";
+
+const categoryRoutes = {
+  চাল: "chal",
+  ডাল: "dal",
+  তেল: "tel",
+  সবজি: "sobji",
+  মাছ: "mach",
+  মাংস: "mangsho",
+  "ডিম-দুধ": "dim-dudh",
+  "ডিম ও দুধ": "dim-dudh",
+  মসলা: "moshla",
+};
 
 function formatPrice(price) {
   return Number(price || 0).toLocaleString("bn-BD");
@@ -37,7 +49,21 @@ function getShortUnit(unit) {
   return units[unit] || unit;
 }
 
-export default function ProductDetails({ params }) {
+export default function ProductDetailsPage({ params }) {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-[60vh] bg-[#f0f5f0] px-4 py-16 text-center text-[#68756b]">
+          পণ্যের তথ্য লোড হচ্ছে...
+        </main>
+      }
+    >
+      <ProductDetailsContent params={params} />
+    </Suspense>
+  );
+}
+
+function ProductDetailsContent({ params }) {
   const { slug } = use(params);
 
   const [product, setProduct] = useState(null);
@@ -45,35 +71,57 @@ export default function ProductDetails({ params }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadProduct() {
       try {
         setLoading(true);
         setError("");
 
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
           throw new Error("পণ্যের তথ্য পাওয়া যায়নি।");
         }
 
         const data = await response.json();
-        const foundProduct = data.find((item) => item.slug === slug);
+
+        const foundProduct = Array.isArray(data)
+          ? data.find((item) => item.slug === slug)
+          : null;
 
         if (!foundProduct) {
-          setError("এই পণ্যটি খুঁজে পাওয়া যায়নি।");
+          if (!cancelled) {
+            setProduct(null);
+            setError("এই পণ্যটি খুঁজে পাওয়া যায়নি।");
+          }
           return;
         }
 
-        setProduct(foundProduct);
+        if (!cancelled) {
+          setProduct(foundProduct);
+        }
       } catch (err) {
         console.error("Product details error:", err);
-        setError("পণ্যের তথ্য লোড করা যায়নি।");
+
+        if (!cancelled) {
+          setProduct(null);
+          setError("পণ্যের তথ্য লোড করা যায়নি।");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadProduct();
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   if (loading) {
@@ -106,7 +154,6 @@ export default function ProductDetails({ params }) {
   const isUp = product.change?.dir === "up";
   const isDown = product.change?.dir === "down";
 
-  // দাম বাড়লে লাল, কমলে সবুজ এবং অপরিবর্তিত থাকলে ধূসর
   const changeColor = isUp
     ? "text-[#dc4545]"
     : isDown
@@ -141,28 +188,37 @@ export default function ProductDetails({ params }) {
     Math.abs(Number(product.change?.pct || 0)),
   );
 
+  const categorySlug =
+    categoryRoutes[product.categoryNameBn] || product.category;
+
   return (
     <main className="min-h-screen bg-[#f0f5f0] px-4 py-6 sm:px-6 sm:py-8">
       <div className="mx-auto max-w-[1200px]">
-        {/* Breadcrumb */}
-        <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs text-[#526257] sm:text-sm">
-          <Link href="/" className="hover:text-[#078b43]">
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-6 flex flex-wrap items-center gap-2 text-xs text-[#526257] sm:text-sm"
+        >
+          <Link href="/" className="hover:text-[#078b43] hover:underline">
             হোম
           </Link>
 
           <span>›</span>
 
-          <span>{product.categoryNameBn}</span>
+          <Link
+            href={`/category/${categorySlug}`}
+            className="font-medium text-[#267747] hover:underline"
+          >
+            {product.categoryNameBn}
+          </Link>
 
           <span>›</span>
 
           <span className="font-medium text-[#26352b]">{product.nameBn}</span>
         </nav>
 
-        {/* Product summary */}
         <section className="flex flex-col gap-5 rounded-2xl border border-[#e0e9e0] bg-[#fafcfb] p-4 sm:flex-row sm:items-center sm:p-5">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#eff4ee] text-3xl sm:h-20 sm:w-20">
-            {product.image || product.categoryIcon || "🛒"}
+            {product.categoryIcon || "🛒"}
           </div>
 
           <div className="min-w-0 flex-1">
@@ -186,7 +242,6 @@ export default function ProductDetails({ params }) {
             </p>
           </div>
 
-          {/* Today's price */}
           <div className="flex min-w-[130px] flex-col items-start rounded-xl bg-[#eff4ee] px-4 py-3 sm:items-center">
             <span className="text-xs text-[#68756b]">আজকের দাম</span>
 
@@ -204,13 +259,11 @@ export default function ProductDetails({ params }) {
           </div>
         </section>
 
-        {/* Price summary and market table */}
         <section className="mt-4 rounded-2xl border border-[#e0e9e0] bg-[#fafcfb] p-4 sm:p-5">
           <h2 className="mb-3 text-base font-bold text-[#26352b]">
             দামের সারসংক্ষেপ
           </h2>
 
-          {/* Minimum, maximum and average prices */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-[#e0e9e0] p-4">
               <p className="text-xs text-[#526257]">সর্বনিম্ন দাম</p>
@@ -249,7 +302,6 @@ export default function ProductDetails({ params }) {
             </div>
           </div>
 
-          {/* Market-wise prices */}
           <h2 className="mb-3 mt-6 text-base font-bold text-[#26352b]">
             বাজারভিত্তিক আজকের দাম
           </h2>
@@ -259,13 +311,9 @@ export default function ProductDetails({ params }) {
               <thead className="bg-[#f0f5f0] text-[#526257]">
                 <tr>
                   <th className="px-3 py-3 font-medium">বাজার</th>
-
                   <th className="px-3 py-3 font-medium">বিভাগ</th>
-
                   <th className="px-3 py-3 font-medium">সর্বনিম্ন</th>
-
                   <th className="px-3 py-3 font-medium">সর্বোচ্চ</th>
-
                   <th className="px-3 py-3 text-right font-medium">গড়</th>
                 </tr>
               </thead>

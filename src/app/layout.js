@@ -1,5 +1,6 @@
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "বাজার দর | প্রতিদিনের বাজারের দাম",
@@ -11,7 +12,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="bn">
       <body className="flex min-h-screen flex-col antialiased">
-        <Navbar />
+        <Suspense fallback={null}>
+          <Navbar />
+        </Suspense>
 
         <main className="flex-1">{children}</main>
 

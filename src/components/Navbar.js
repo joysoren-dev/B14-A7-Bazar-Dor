@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const categories = [
-  { name: "চাল", slug: "chal", icon: "🌾" },
+  { name: "চাল", slug: "chal", icon: "🍚" },
   { name: "ডাল", slug: "dal", icon: "🫘" },
   { name: "তেল", slug: "tel", icon: "🫗" },
   { name: "সবজি", slug: "sobji", icon: "🥬" },
@@ -27,7 +28,7 @@ function useBanglaDate() {
   const [date, setDate] = useState("");
 
   useEffect(() => {
-    const updateDate = () => {
+    function updateDate() {
       setDate(
         new Intl.DateTimeFormat("bn-BD", {
           day: "numeric",
@@ -36,10 +37,12 @@ function useBanglaDate() {
           timeZone: "Asia/Dhaka",
         }).format(new Date()),
       );
-    };
+    }
 
     updateDate();
+
     const timer = setInterval(updateDate, 60 * 60 * 1000);
+
     return () => clearInterval(timer);
   }, []);
 
@@ -47,6 +50,7 @@ function useBanglaDate() {
 }
 
 export default function Navbar() {
+  const pathname = usePathname();
   const banglaDate = useBanglaDate();
 
   return (
@@ -65,6 +69,7 @@ export default function Navbar() {
               <h1 className="text-xl font-bold leading-tight text-[#267747]">
                 বাজার দর
               </h1>
+
               <p className="text-[10px] leading-4 text-[#778177]">
                 {banglaDate}
               </p>
@@ -81,31 +86,40 @@ export default function Navbar() {
 
             <Link
               href="/signup"
-              className="rounded-md bg-[#078b43] px-3 py-2 text-xs font-semibold !text-white hover:bg-[#067638]"
+              className="rounded-md bg-[#078b43] px-3 py-2 text-xs font-semibold text-white hover:bg-[#067638]"
             >
               সাইন আপ
             </Link>
           </div>
         </div>
 
-        {/* Category row: aligned with the logo/brand column */}
+        {/* Category navigation */}
         <nav className="border-t border-[#f0f2ed]">
           <div className="flex items-center gap-1 overflow-x-auto py-1 sm:gap-2">
-            {categories.map((category) => (
-              <Link
-                key={category.slug}
-                href={`/category/${category.slug}`}
-                className="flex shrink-0 items-center gap-1 rounded-md px-2 py-2 text-xs font-medium text-[#344238] transition hover:bg-[#edf5e9] hover:text-[#267747]"
-              >
-                <span aria-hidden="true">{category.icon}</span>
-                <span>{category.name}</span>
-              </Link>
-            ))}
+            {categories.map((category) => {
+              const isActive = pathname === `/category/${category.slug}`;
+
+              return (
+                <Link
+                  key={category.slug}
+                  href={`/category/${category.slug}`}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex shrink-0 items-center gap-1 rounded-md px-3 py-2 text-xs font-semibold transition ${
+                    isActive
+                      ? "bg-[#078b43] text-white"
+                      : "text-[#344238] hover:bg-[#edf5e9] hover:text-[#267747]"
+                  }`}
+                >
+                  <span aria-hidden="true">{category.icon}</span>
+                  <span>{category.name}</span>
+                </Link>
+              );
+            })}
           </div>
         </nav>
       </div>
 
-      {/* Animated ticker */}
+      {/* Animated price ticker */}
       <div className="overflow-hidden border-t border-[#e9eee5] bg-[#f0f6ed] py-1.5">
         <div className="ticker-track">
           {[...tickerItems, ...tickerItems].map((item, index) => (
@@ -113,11 +127,14 @@ export default function Navbar() {
               key={`${item.name}-${index}`}
               className="flex shrink-0 items-center gap-1.5 px-4 text-xs"
             >
-              <span>🌾</span>
+              <span aria-hidden="true">🌾</span>
+
               <span className="font-medium text-[#344238]">{item.name}</span>
+
               <span className="font-semibold text-[#344238]">
                 {item.price} টাকা/কেজি
               </span>
+
               <span
                 className={
                   item.up
@@ -127,6 +144,7 @@ export default function Navbar() {
               >
                 {item.up ? "▲" : "▼"} {item.change}
               </span>
+
               <span className="ml-2 text-[#cbd8c7]">•</span>
             </div>
           ))}
