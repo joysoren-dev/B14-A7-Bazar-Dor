@@ -1,8 +1,9 @@
 "use client";
+
 import { Suspense, use, useEffect, useState } from "react";
 import Link from "next/link";
 
-const API_URL = "https://api.abcz.workers.dev/api/bazardor";
+const API_URL = "https://api.abcz.workers.dev/api/bazardor/products";
 
 const categories = {
   chal: { name: "চাল", icon: "🍚", apiSlug: "chal" },
@@ -23,18 +24,56 @@ function formatPrice(price) {
   return Number(price ?? 0).toLocaleString("bn-BD");
 }
 
+function getUnit(unit) {
+  const units = {
+    kg: "কেজি",
+    litre: "লিটার",
+    dozen: "ডজন",
+    piece: "পিস",
+    gram: "গ্রাম",
+  };
+
+  return units[unit] || unit || "একক";
+}
+
+// Product-er nijer icon/image age nicchi, na thakle category icon use kortesi.
+function getProductVisual(product, categoryIcon) {
+  const visual = product.image || product.icon || product.emoji;
+
+  if (typeof visual === "string" && visual.trim()) {
+    return visual;
+  }
+
+  return categoryIcon || product.categoryIcon || "🛒";
+}
+
 function ProductCard({ product, categoryIcon }) {
   const change = Number(product.change?.pct ?? 0);
   const isUp = product.change?.dir === "up";
   const isDown = product.change?.dir === "down";
 
+  const visual = getProductVisual(product, categoryIcon);
+
   return (
     <Link
       href={`/product/${product.slug}`}
-      className="group flex min-h-[100px] items-center gap-3 rounded-xl border border-[#e3ebe2] bg-[#fbfdfb] p-3 transition hover:border-[#b7d7bd] hover:shadow-sm sm:p-4"
+      aria-label={`${product.nameBn}, বিস্তারিত দাম দেখুন`}
+      className="group flex min-h-[112px] items-center gap-3 rounded-xl border border-[#e3ebe2] bg-[#fbfdfb] p-3 transition hover:border-[#b7d7bd] hover:shadow-sm sm:p-4"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0f5ef] text-2xl">
-        {categoryIcon || product.categoryIcon || "🛒"}
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#f0f5ef] text-3xl">
+        {typeof visual === "string" &&
+        (visual.startsWith("http://") ||
+          visual.startsWith("https://") ||
+          visual.startsWith("/")) ? (
+          <img
+            src={visual}
+            alt={product.nameBn || "পণ্যের ছবি"}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span aria-hidden="true">{visual}</span>
+        )}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -43,16 +82,7 @@ function ProductCard({ product, categoryIcon }) {
         </h2>
 
         <p className="mt-1 text-[11px] text-[#7a857b]">
-          প্রতি{" "}
-          {product.unit === "kg"
-            ? "কেজি"
-            : product.unit === "litre"
-              ? "লিটার"
-              : product.unit === "dozen"
-                ? "ডজন"
-                : product.unit === "piece"
-                  ? "পিস"
-                  : product.unit || "একক"}
+          প্রতি {getUnit(product.unit)}
         </p>
 
         <p className="mt-3 text-[10px] text-[#778177]">আজকের বাজারদর</p>
@@ -77,11 +107,26 @@ function ProductCard({ product, categoryIcon }) {
   );
 }
 
+function ProductSkeleton() {
+  return (
+    <div className="flex animate-pulse items-center gap-3 rounded-xl border border-[#e3ebe2] bg-[#fbfdfb] p-4">
+      <div className="h-14 w-14 shrink-0 rounded-xl bg-[#e7eee5]" />
+
+      <div className="flex-1">
+        <div className="h-3 w-3/4 rounded bg-[#e7eee5]" />
+        <div className="mt-2 h-2 w-1/3 rounded bg-[#e7eee5]" />
+        <div className="mt-4 h-3 w-1/2 rounded bg-[#e7eee5]" />
+      </div>
+    </div>
+  );
+}
+
 function CategoryContent({ slug }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [sort, setSort] = useState("default");
+  const [retry, setRetry] = useState(0);
 
   const category = categories[slug];
 
@@ -93,7 +138,7 @@ function CategoryContent({ slug }) {
       setError(false);
 
       try {
-        const response = await fetch(`${API_URL}/products`, {
+        const response = await fetch(API_URL, {
           cache: "no-store",
         });
 
@@ -139,7 +184,7 @@ function CategoryContent({ slug }) {
     return () => {
       cancelled = true;
     };
-  }, [slug, category?.apiSlug]);
+  }, [slug, category?.apiSlug, retry]);
 
   const sortedProducts = [...products].sort((a, b) => {
     const priceA = Number(a.today ?? 0);
@@ -219,19 +264,8 @@ function CategoryContent({ slug }) {
 
       {loading ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="flex animate-pulse items-center gap-3 rounded-xl border border-[#e3ebe2] bg-[#fbfdfb] p-4"
-            >
-              <div className="h-10 w-10 shrink-0 rounded-lg bg-[#e7eee5]" />
-
-              <div className="flex-1">
-                <div className="h-3 w-3/4 rounded bg-[#e7eee5]" />
-                <div className="mt-2 h-2 w-1/3 rounded bg-[#e7eee5]" />
-                <div className="mt-4 h-3 w-1/2 rounded bg-[#e7eee5]" />
-              </div>
-            </div>
+          {Array.from({ length: 6 }, (_, index) => (
+            <ProductSkeleton key={index} />
           ))}
         </div>
       ) : error ? (
@@ -241,8 +275,9 @@ function CategoryContent({ slug }) {
           </p>
 
           <button
-            onClick={() => window.location.reload()}
-            className="mt-4 rounded-lg bg-[#078b43] px-5 py-2.5 text-sm font-semibold text-white"
+            type="button"
+            onClick={() => setRetry((current) => current + 1)}
+            className="mt-4 rounded-lg bg-[#078b43] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#067638]"
           >
             আবার চেষ্টা করুন
           </button>
@@ -283,7 +318,9 @@ function CategoryContent({ slug }) {
 
 export default function CategoryPage({ params }) {
   return (
-    <Suspense fallback={<div className="min-h-[55vh]" />}>
+    <Suspense
+      fallback={<div className="min-h-[55vh] animate-pulse bg-[#f0f5f0]" />}
+    >
       <CategoryRoute params={params} />
     </Suspense>
   );
