@@ -33,7 +33,7 @@ export default function SignupPage() {
     }
   }
 
-  // Ekhane input-e abar lekha shuru korle purono validation message muche jabe.
+  // Ekhane abar input dile purono validation message clear kortesi.
   function clearBanglaValidation(e) {
     e.currentTarget.setCustomValidity("");
   }
@@ -41,13 +41,15 @@ export default function SignupPage() {
   async function handleSignup(e) {
     e.preventDefault();
 
+    if (loading || socialLoading) return;
+
     if (password.length < 8) {
-      toast.error("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে");
+      toast.error("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("দুটি পাসওয়ার্ড মিলছে না");
+      toast.error("দুটি পাসওয়ার্ড মিলছে না।");
       return;
     }
 
@@ -61,13 +63,14 @@ export default function SignupPage() {
       });
 
       if (result.error) {
-        toast.error(result.error.message || "অ্যাকাউন্ট তৈরি করা যায়নি");
+        toast.error(result.error.message || "অ্যাকাউন্ট তৈরি করা যায়নি।");
         return;
       }
 
       toast.success("সাইন আপ সফল হয়েছে!");
       router.push("/signin");
-    } catch {
+    } catch (error) {
+      console.error("Signup error:", error);
       toast.error("অ্যাকাউন্ট তৈরি করা যায়নি। আবার চেষ্টা করুন।");
     } finally {
       setLoading(false);
@@ -75,19 +78,23 @@ export default function SignupPage() {
   }
 
   async function handleSocialLogin(provider) {
+    if (loading || socialLoading) return;
+
     setSocialLoading(provider);
 
     try {
       const result = await signIn.social({
         provider,
         callbackURL: "/",
+        errorCallbackURL: "/signin",
       });
 
       if (result?.error) {
         toast.error(result.error.message || "Social login শুরু করা যায়নি।");
         setSocialLoading("");
       }
-    } catch {
+    } catch (error) {
+      console.error("Social login error:", error);
       toast.error("Social login শুরু করা যায়নি।");
       setSocialLoading("");
     }

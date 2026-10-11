@@ -16,7 +16,7 @@ function getRedirectPath() {
   const params = new URLSearchParams(window.location.search);
   const callbackURL = params.get("callbackURL");
 
-  // Nijer site-er relative path chara onno URL allow kortesi na
+  // Nijer site-er relative path chara onno URL allow kortesi
   if (
     callbackURL &&
     callbackURL.startsWith("/") &&
@@ -80,12 +80,15 @@ export default function SigninPage() {
   }
 
   async function handleSocialLogin(provider) {
+    if (loading || socialLoading) return;
+
     setSocialLoading(provider);
 
     try {
       const result = await signIn.social({
         provider,
         callbackURL: getRedirectPath(),
+        errorCallbackURL: "/signin",
       });
 
       if (result?.error) {
@@ -182,6 +185,7 @@ export default function SigninPage() {
               className={socialButtonClass}
             >
               <FcGoogle size={16} className="shrink-0" aria-hidden="true" />
+
               <span>
                 {socialLoading === "google"
                   ? "অপেক্ষা করুন..."
@@ -200,6 +204,7 @@ export default function SigninPage() {
                 className="shrink-0 text-[#202020]"
                 aria-hidden="true"
               />
+
               <span>
                 {socialLoading === "github"
                   ? "অপেক্ষা করুন..."
