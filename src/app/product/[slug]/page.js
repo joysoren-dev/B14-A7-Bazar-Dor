@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, use, useEffect, useState } from "react";
+import { Suspense, use, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "../../../lib/auth-client";
+import toast from "react-hot-toast";
 
 const API_URL = "https://api.abcz.workers.dev/api/bazardor/products";
 
@@ -66,11 +69,37 @@ export default function ProductDetailsPage({ params }) {
 function ProductDetailsContent({ params }) {
   const { slug } = use(params);
 
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+  const user = session?.user;
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const redirectStarted = useRef(false);
+
+  // Login na thakle ekbar toast diye Sign in page e pathacchi
   useEffect(() => {
+    if (isPending || user || redirectStarted.current) {
+      return;
+    }
+
+    redirectStarted.current = true;
+
+    toast.error("বিস্তারিত দাম দেখতে আগে সাইন ইন করুন।");
+
+    router.replace(
+      `/signin?callbackURL=${encodeURIComponent(`/product/${slug}`)}`,
+    );
+  }, [isPending, user, router, slug]);
+
+  // Login thaklei product data load kortesi
+  useEffect(() => {
+    if (isPending || !user) {
+      return;
+    }
+
     let cancelled = false;
 
     async function loadProduct() {
@@ -122,7 +151,23 @@ function ProductDetailsContent({ params }) {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, isPending, user]);
+
+  if (isPending) {
+    return (
+      <main className="min-h-[60vh] bg-[#f0f5f0] px-4 py-16 text-center text-[#68756b]">
+        সেশন যাচাই করা হচ্ছে...
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-[60vh] bg-[#f0f5f0] px-4 py-16 text-center text-[#68756b]">
+        সাইন ইন পেজে নেওয়া হচ্ছে...
+      </main>
+    );
+  }
 
   if (loading) {
     return (
@@ -267,11 +312,9 @@ function ProductDetailsContent({ params }) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-[#e0e9e0] p-4">
               <p className="text-xs text-[#526257]">সর্বনিম্ন দাম</p>
-
               <p className="mt-1 text-xl font-bold text-[#078b43]">
                 {formatMoney(minimumPrice)}
               </p>
-
               <p className="mt-1 text-xs text-[#68756b]">
                 সব বাজারের মধ্যে সর্বনিম্ন
               </p>
@@ -279,11 +322,9 @@ function ProductDetailsContent({ params }) {
 
             <div className="rounded-xl border border-[#e0e9e0] p-4">
               <p className="text-xs text-[#526257]">সর্বোচ্চ দাম</p>
-
               <p className="mt-1 text-xl font-bold text-[#dc4545]">
                 {formatMoney(maximumPrice)}
               </p>
-
               <p className="mt-1 text-xs text-[#68756b]">
                 সব বাজারের মধ্যে সর্বোচ্চ
               </p>
@@ -291,11 +332,9 @@ function ProductDetailsContent({ params }) {
 
             <div className="rounded-xl border border-[#e0e9e0] p-4">
               <p className="text-xs text-[#526257]">গড় দাম</p>
-
               <p className="mt-1 text-xl font-bold text-[#26352b]">
                 {formatMoney(Math.round(averagePrice))}
               </p>
-
               <p className="mt-1 text-xs text-[#68756b]">
                 সব বাজারের min ও max-এর গড়
               </p>

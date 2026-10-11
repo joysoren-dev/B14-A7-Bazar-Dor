@@ -8,14 +8,34 @@ import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import toast from "react-hot-toast";
 
+function getRedirectPath() {
+  if (typeof window === "undefined") {
+    return "/";
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const callbackURL = params.get("callbackURL");
+
+  // Nijer site-er relative path chara onno URL allow kortesi na
+  if (
+    callbackURL &&
+    callbackURL.startsWith("/") &&
+    !callbackURL.startsWith("//")
+  ) {
+    return callbackURL;
+  }
+
+  return "/";
+}
+
 export default function SigninPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState("");
 
-  // Ekhane native validation message Banglay deya hocche.
   function handleBanglaValidation(e) {
     const input = e.currentTarget;
 
@@ -28,7 +48,6 @@ export default function SigninPage() {
     }
   }
 
-  // Ekhane abar lekha shuru korle purono validation message muche jabe.
   function clearBanglaValidation(e) {
     e.currentTarget.setCustomValidity("");
   }
@@ -44,14 +63,16 @@ export default function SigninPage() {
       });
 
       if (result.error) {
-        toast.error(result.error.message || "সাইন ইন করা যায়নি");
+        toast.error(result.error.message || "সাইন ইন করা যায়নি।");
         return;
       }
 
       toast.success("সাইন ইন সফল হয়েছে!");
-      router.push("/");
+
+      router.replace(getRedirectPath());
       router.refresh();
-    } catch {
+    } catch (error) {
+      console.error("Sign in error:", error);
       toast.error("সাইন ইন করা যায়নি। আবার চেষ্টা করুন।");
     } finally {
       setLoading(false);
@@ -64,14 +85,15 @@ export default function SigninPage() {
     try {
       const result = await signIn.social({
         provider,
-        callbackURL: "/",
+        callbackURL: getRedirectPath(),
       });
 
       if (result?.error) {
         toast.error(result.error.message || "Social login শুরু করা যায়নি।");
         setSocialLoading("");
       }
-    } catch {
+    } catch (error) {
+      console.error("Social login error:", error);
       toast.error("Social login শুরু করা যায়নি।");
       setSocialLoading("");
     }
@@ -148,9 +170,7 @@ export default function SigninPage() {
 
           <div className="my-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-[#e1e7df]" />
-
             <span className="text-xs font-medium text-[#536057]">অথবা</span>
-
             <div className="h-px flex-1 bg-[#e1e7df]" />
           </div>
 
@@ -162,7 +182,6 @@ export default function SigninPage() {
               className={socialButtonClass}
             >
               <FcGoogle size={16} className="shrink-0" aria-hidden="true" />
-
               <span>
                 {socialLoading === "google"
                   ? "অপেক্ষা করুন..."
@@ -181,7 +200,6 @@ export default function SigninPage() {
                 className="shrink-0 text-[#202020]"
                 aria-hidden="true"
               />
-
               <span>
                 {socialLoading === "github"
                   ? "অপেক্ষা করুন..."
