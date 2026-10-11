@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, use, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { useSession } from "../../../lib/auth-client";
 import toast from "react-hot-toast";
 
@@ -37,7 +37,7 @@ function getUnit(unit) {
     gram: "প্রতি গ্রাম",
   };
 
-  return units[unit] || `প্রতি ${unit}`;
+  return units[unit] || `প্রতি ${unit || "একক"}`;
 }
 
 function getShortUnit(unit) {
@@ -49,7 +49,7 @@ function getShortUnit(unit) {
     gram: "গ্রাম",
   };
 
-  return units[unit] || unit;
+  return units[unit] || unit || "একক";
 }
 
 export default function ProductDetailsPage({ params }) {
@@ -79,7 +79,6 @@ function ProductDetailsContent({ params }) {
 
   const redirectStarted = useRef(false);
 
-  // Login na thakle ekbar toast diye Sign in page e pathacchi
   useEffect(() => {
     if (isPending || user || redirectStarted.current) {
       return;
@@ -94,7 +93,6 @@ function ProductDetailsContent({ params }) {
     );
   }, [isPending, user, router, slug]);
 
-  // Login thaklei product data load kortesi
   useEffect(() => {
     if (isPending || !user) {
       return;
@@ -120,14 +118,6 @@ function ProductDetailsContent({ params }) {
         const foundProduct = Array.isArray(data)
           ? data.find((item) => item.slug === slug)
           : null;
-
-        if (!foundProduct) {
-          if (!cancelled) {
-            setProduct(null);
-            setError("এই পণ্যটি খুঁজে পাওয়া যায়নি।");
-          }
-          return;
-        }
 
         if (!cancelled) {
           setProduct(foundProduct);
@@ -177,13 +167,11 @@ function ProductDetailsContent({ params }) {
     );
   }
 
-  if (error || !product) {
+  if (error) {
     return (
       <main className="min-h-[60vh] bg-[#f0f5f0] px-4 py-16">
         <div className="mx-auto max-w-4xl rounded-2xl border border-[#e0e9e0] bg-[#fafcfb] p-8 text-center">
-          <p className="font-semibold text-[#26352b]">
-            {error || "পণ্য পাওয়া যায়নি"}
-          </p>
+          <p className="font-semibold text-[#26352b]">{error}</p>
 
           <Link
             href="/"
@@ -194,6 +182,10 @@ function ProductDetailsContent({ params }) {
         </div>
       </main>
     );
+  }
+
+  if (!product) {
+    notFound();
   }
 
   const isUp = product.change?.dir === "up";
@@ -370,19 +362,15 @@ function ProductDetailsContent({ params }) {
                     <td className="px-3 py-3 text-[#26352b]">
                       {market.market}
                     </td>
-
                     <td className="px-3 py-3 text-[#526257]">
                       {market.division}
                     </td>
-
                     <td className="px-3 py-3 text-[#26352b]">
                       {formatMoney(market.min)}
                     </td>
-
                     <td className="px-3 py-3 text-[#26352b]">
                       {formatMoney(market.max)}
                     </td>
-
                     <td className="px-3 py-3 text-right font-semibold text-[#26352b]">
                       {formatMoney(Math.round(market.average))}
                     </td>

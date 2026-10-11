@@ -2,6 +2,7 @@
 
 import { Suspense, use, useEffect, useState } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 const API_URL = "https://api.abcz.workers.dev/api/bazardor/products";
 
@@ -36,7 +37,6 @@ function getUnit(unit) {
   return units[unit] || unit || "একক";
 }
 
-// Product-er nijer icon/image age nicchi, na thakle category icon use kortesi.
 function getProductVisual(product, categoryIcon) {
   const visual = product.image || product.icon || product.emoji;
 
@@ -51,8 +51,13 @@ function ProductCard({ product, categoryIcon }) {
   const change = Number(product.change?.pct ?? 0);
   const isUp = product.change?.dir === "up";
   const isDown = product.change?.dir === "down";
-
   const visual = getProductVisual(product, categoryIcon);
+
+  const isImage =
+    typeof visual === "string" &&
+    (visual.startsWith("http://") ||
+      visual.startsWith("https://") ||
+      visual.startsWith("/"));
 
   return (
     <Link
@@ -61,10 +66,7 @@ function ProductCard({ product, categoryIcon }) {
       className="group flex min-h-[112px] items-center gap-3 rounded-xl border border-[#e3ebe2] bg-[#fbfdfb] p-3 transition hover:border-[#b7d7bd] hover:shadow-sm sm:p-4"
     >
       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#f0f5ef] text-3xl">
-        {typeof visual === "string" &&
-        (visual.startsWith("http://") ||
-          visual.startsWith("https://") ||
-          visual.startsWith("/")) ? (
+        {isImage ? (
           <img
             src={visual}
             alt={product.nameBn || "পণ্যের ছবি"}
@@ -121,14 +123,12 @@ function ProductSkeleton() {
   );
 }
 
-function CategoryContent({ slug }) {
+function CategoryContent({ category }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [sort, setSort] = useState("default");
   const [retry, setRetry] = useState(0);
-
-  const category = categories[slug];
 
   useEffect(() => {
     let cancelled = false;
@@ -173,18 +173,12 @@ function CategoryContent({ slug }) {
       }
     }
 
-    if (category) {
-      fetchProducts();
-    } else {
-      setProducts([]);
-      setError(false);
-      setLoading(false);
-    }
+    fetchProducts();
 
     return () => {
       cancelled = true;
     };
-  }, [slug, category?.apiSlug, retry]);
+  }, [category.apiSlug, retry]);
 
   const sortedProducts = [...products].sort((a, b) => {
     const priceA = Number(a.today ?? 0);
@@ -195,29 +189,6 @@ function CategoryContent({ slug }) {
 
     return 0;
   });
-
-  if (!category) {
-    return (
-      <section className="mx-auto flex min-h-[55vh] max-w-5xl flex-col items-center justify-center px-4 text-center">
-        <span className="text-5xl">🔎</span>
-
-        <h1 className="mt-4 text-2xl font-bold text-[#26362b]">
-          ক্যাটাগরি খুঁজে পাওয়া যায়নি
-        </h1>
-
-        <p className="mt-2 text-sm text-[#778177]">
-          অনুগ্রহ করে সঠিক ক্যাটাগরি নির্বাচন করুন।
-        </p>
-
-        <Link
-          href="/"
-          className="mt-5 rounded-lg bg-[#078b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#067638]"
-        >
-          হোম পেজে ফিরে যান
-        </Link>
-      </section>
-    );
-  }
 
   return (
     <section className="mx-auto min-h-[55vh] w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
@@ -328,6 +299,11 @@ export default function CategoryPage({ params }) {
 
 function CategoryRoute({ params }) {
   const { slug } = use(params);
+  const category = categories[slug];
 
-  return <CategoryContent slug={slug} />;
+  if (!category) {
+    notFound();
+  }
+
+  return <CategoryContent category={category} />;
 }
