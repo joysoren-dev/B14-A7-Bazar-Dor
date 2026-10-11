@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "../lib/auth-client";
 import toast from "react-hot-toast";
 
+const API_URL = "https://api.abcz.workers.dev/api/bazardor/products";
+
 const categories = [
   { name: "চাল", slug: "chal", icon: "🍚" },
   { name: "ডাল", slug: "dal", icon: "🫘" },
@@ -17,20 +19,11 @@ const categories = [
   { name: "মসলা", slug: "moshla", icon: "🌶️" },
 ];
 
-const tickerItems = [
-  { name: "মোটা চাল", price: "৫৮", change: "+১.৫%", up: true },
-  { name: "মিনিকেট চাল", price: "৬৯", change: "-২.৯%", up: false },
-  { name: "বাছাই সরু চাল", price: "৮৬", change: "+০.৫%", up: true },
-  { name: "মসুর ডাল", price: "১৪২", change: "+২.৯%", up: true },
-  { name: "ভোজ্য তেল", price: "১৭০", change: "-১.৮%", up: false },
-  { name: "আমন চাল", price: "৬২", change: "+০.৮%", up: true },
-];
-
 function useBanglaDate() {
   const [date, setDate] = useState("");
 
   useEffect(() => {
-    function updateDate() {
+    const updateDate = () => {
       setDate(
         new Intl.DateTimeFormat("bn-BD", {
           day: "numeric",
@@ -39,10 +32,9 @@ function useBanglaDate() {
           timeZone: "Asia/Dhaka",
         }).format(new Date()),
       );
-    }
+    };
 
     updateDate();
-
     const timer = setInterval(updateDate, 60 * 60 * 1000);
 
     return () => clearInterval(timer);
@@ -51,21 +43,80 @@ function useBanglaDate() {
   return date;
 }
 
+function formatPrice(price) {
+  return Number(price ?? 0).toLocaleString("bn-BD");
+}
+
+function getUnit(unit) {
+  const units = {
+    kg: "কেজি",
+    dozen: "ডজন",
+    litre: "লিটার",
+    piece: "পিস",
+    gram: "গ্রাম",
+  };
+
+  return units[unit] || unit || "একক";
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const banglaDate = useBanglaDate();
-
   const { data: session, isPending } = useSession();
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [tickerItems, setTickerItems] = useState([]);
 
   const user = session?.user;
 
-  // Page change hole dropdown bondho kortesi
   useEffect(() => {
     setProfileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchTickerProducts() {
+      try {
+        const response = await fetch(API_URL, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Ticker data could not be loaded");
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid ticker data");
+        }
+
+        setTickerItems(
+          data
+            .filter(
+              (product) =>
+                product.nameBn &&
+                product.today !== undefined &&
+                product.today !== null,
+            )
+            .slice(0, 12),
+        );
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Price ticker error:", error);
+          setTickerItems([]);
+        }
+      }
+    }
+
+    fetchTickerProducts();
+
+    return () => controller.abort();
+  }, []);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -92,9 +143,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-[#e6ebe4] bg-white">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        {/* Top row */}
-        <div className="flex min-h-[64px] items-center justify-between gap-4 py-2">
-          <Link href="/" className="flex shrink-0 items-center gap-2">
+        <div className="flex min-h-[64px] items-center justify-between gap-3 py-2">
+          <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2">
             <img
               src="/logo-icon.png"
               alt="বাজার দর"
@@ -105,14 +155,12 @@ export default function Navbar() {
               <h1 className="text-xl font-bold leading-tight text-[#267747]">
                 বাজার দর
               </h1>
-
               <p className="text-[10px] leading-4 text-[#778177]">
                 {banglaDate}
               </p>
             </div>
           </Link>
 
-          {/* Authentication area */}
           <div className="flex shrink-0 items-center gap-2">
             {isPending ? (
               <div
@@ -234,8 +282,10 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Category navigation */}
-        <nav className="border-t border-[#f0f2ed]">
+        <nav
+          aria-label="পণ্যের ক্যাটাগরি"
+          className="border-t border-[#f0f2ed]"
+        >
           <div className="flex items-center gap-1 overflow-x-auto py-1 sm:gap-2">
             {categories.map((category) => {
               const isActive = pathname === `/category/${category.slug}`;
@@ -260,36 +310,54 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* Animated price ticker */}
-      <div className="overflow-hidden border-t border-[#e9eee5] bg-[#f0f6ed] py-1.5">
-        <div className="ticker-track">
-          {[...tickerItems, ...tickerItems].map((item, index) => (
-            <div
-              key={`${item.name}-${index}`}
-              className="flex shrink-0 items-center gap-1.5 px-4 text-xs"
-            >
-              <span aria-hidden="true">🌾</span>
+      <div
+        className="overflow-hidden border-t border-[#e9eee5] bg-[#f0f6ed] py-1.5"
+        aria-label="সাম্প্রতিক পণ্যের দাম"
+      >
+        {tickerItems.length > 0 ? (
+          <div className="ticker-track">
+            {[...tickerItems, ...tickerItems].map((item, index) => {
+              const isUp = item.change?.dir === "up";
+              const isDown = item.change?.dir === "down";
 
-              <span className="font-medium text-[#344238]">{item.name}</span>
+              return (
+                <div
+                  key={`${item.slug || item.id || item.nameBn}-${index}`}
+                  className="flex shrink-0 items-center gap-1.5 px-4 text-xs"
+                >
+                  <span aria-hidden="true">🌾</span>
+                  <span className="font-medium text-[#344238]">
+                    {item.nameBn}
+                  </span>
+                  <span className="font-semibold text-[#344238]">
+                    {formatPrice(item.today)} টাকা/{getUnit(item.unit)}
+                  </span>
 
-              <span className="font-semibold text-[#344238]">
-                {item.price} টাকা/কেজি
-              </span>
+                  {item.change && (
+                    <span
+                      className={
+                        isUp
+                          ? "font-semibold text-[#d94c4c]"
+                          : isDown
+                            ? "font-semibold text-[#218653]"
+                            : "font-semibold text-[#667168]"
+                      }
+                    >
+                      {isUp ? "▲" : isDown ? "▼" : "—"}{" "}
+                      {formatPrice(Math.abs(Number(item.change.pct ?? 0)))}%
+                    </span>
+                  )}
 
-              <span
-                className={
-                  item.up
-                    ? "font-semibold text-[#d94c4c]"
-                    : "font-semibold text-[#218653]"
-                }
-              >
-                {item.up ? "▲" : "▼"} {item.change}
-              </span>
-
-              <span className="ml-2 text-[#cbd8c7]">•</span>
-            </div>
-          ))}
-        </div>
+                  <span className="ml-2 text-[#cbd8c7]">•</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="px-4 text-center text-xs text-[#68756b]">
+            পণ্যের দাম লোড হচ্ছে...
+          </p>
+        )}
       </div>
     </header>
   );

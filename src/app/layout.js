@@ -21,9 +21,9 @@ export default function RootLayout({ children }) {
 
         <footer className="mt-auto border-t border-[#e6ebe4] bg-[#fafcf9] px-4 py-5">
           <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 text-center text-xs text-[#536055] sm:flex-row sm:text-left">
-            <p>বাজার দর — প্রতিদিনের বাজারদর, এক নজরে।</p>
+            <p>বাজার দর — প্রয়োজনীয় পণ্যের দাম এক নজরে।</p>
 
-            <p>সকল দাম সর্বশেষ; বাজার অবস্থার উপর নির্ভর করে পরিবর্তিত হয়।</p>
+            <p>সকল দাম সম্ভাব্য; বাজার অবস্থার ওপর নির্ভর করে পরিবর্তিত হয়।</p>
           </div>
         </footer>
 
