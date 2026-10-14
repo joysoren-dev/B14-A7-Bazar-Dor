@@ -23,7 +23,7 @@ function useBanglaDate() {
   const [date, setDate] = useState("");
 
   useEffect(() => {
-    const updateDate = () => {
+    function updateDate() {
       setDate(
         new Intl.DateTimeFormat("bn-BD", {
           day: "numeric",
@@ -32,9 +32,10 @@ function useBanglaDate() {
           timeZone: "Asia/Dhaka",
         }).format(new Date()),
       );
-    };
+    }
 
     updateDate();
+
     const timer = setInterval(updateDate, 60 * 60 * 1000);
 
     return () => clearInterval(timer);
@@ -141,30 +142,32 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#e6ebe4] bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex min-h-[64px] items-center justify-between gap-3 py-2">
-          <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2">
+    <header className="sticky top-0 z-50 w-full border-b border-[#e6ebe4] bg-white">
+      <div className="mx-auto w-full max-w-6xl px-3 sm:px-6">
+        {/* Logo and account actions */}
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-2 py-2 sm:flex-nowrap sm:gap-3">
+          <Link href="/" className="flex min-w-0 shrink items-center gap-2">
             <img
               src="/logo-icon.png"
               alt="বাজার দর"
-              className="h-10 w-10 rounded-xl object-contain"
+              className="h-9 w-9 shrink-0 rounded-xl object-contain sm:h-10 sm:w-10"
             />
 
-            <div>
-              <h1 className="text-xl font-bold leading-tight text-[#267747]">
+            <div className="min-w-0">
+              <h1 className="whitespace-nowrap text-base font-bold leading-tight text-[#267747] sm:text-xl">
                 বাজার দর
               </h1>
-              <p className="text-[10px] leading-4 text-[#778177]">
+
+              <p className="whitespace-nowrap text-[9px] leading-4 text-[#778177] sm:text-[10px]">
                 {banglaDate}
               </p>
             </div>
           </Link>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {isPending ? (
               <div
-                className="h-9 w-20 animate-pulse rounded-md bg-[#edf2eb]"
+                className="h-9 w-16 animate-pulse rounded-md bg-[#edf2eb] sm:w-20"
                 aria-label="অ্যাকাউন্টের তথ্য লোড হচ্ছে"
               />
             ) : user ? (
@@ -174,21 +177,21 @@ export default function Navbar() {
                   onClick={() => setProfileOpen((open) => !open)}
                   aria-expanded={profileOpen}
                   aria-haspopup="menu"
-                  className="flex max-w-[190px] items-center gap-2 rounded-lg border border-[#e3e9e1] px-2.5 py-2 transition hover:bg-[#f2f7f0] sm:px-3"
+                  className="flex max-w-[145px] items-center gap-1.5 rounded-lg border border-[#e3e9e1] px-2 py-2 transition hover:bg-[#f2f7f0] sm:max-w-[190px] sm:gap-2 sm:px-3"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e5f4e9] text-sm font-bold text-[#078b43]">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e5f4e9] text-sm font-bold text-[#078b43] sm:h-8 sm:w-8">
                     {(user.name || user.email || "U")
                       .trim()
                       .charAt(0)
                       .toUpperCase()}
                   </span>
 
-                  <span className="max-w-[100px] truncate text-xs font-semibold text-[#26362b] sm:max-w-[130px] sm:text-sm">
+                  <span className="max-w-[65px] truncate text-[11px] font-semibold text-[#26362b] sm:max-w-[130px] sm:text-sm">
                     {user.name || "আমার অ্যাকাউন্ট"}
                   </span>
 
                   <svg
-                    className={`h-4 w-4 shrink-0 text-[#536055] transition-transform ${
+                    className={`h-3.5 w-3.5 shrink-0 text-[#536055] transition-transform sm:h-4 sm:w-4 ${
                       profileOpen ? "rotate-180" : ""
                     }`}
                     viewBox="0 0 20 20"
@@ -206,12 +209,13 @@ export default function Navbar() {
                 {profileOpen && (
                   <div
                     role="menu"
-                    className="absolute right-0 top-full z-[60] mt-2 w-64 overflow-hidden rounded-xl border border-[#e3e9e1] bg-white shadow-lg"
+                    className="absolute right-0 top-full z-[60] mt-2 w-[min(16rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-[#e3e9e1] bg-white shadow-lg"
                   >
                     <div className="border-b border-[#edf1eb] px-4 py-3">
                       <p className="truncate text-sm font-bold text-[#26362b]">
                         {user.name || "ব্যবহারকারী"}
                       </p>
+
                       <p className="mt-1 truncate text-xs text-[#778177]">
                         {user.email}
                       </p>
@@ -225,7 +229,7 @@ export default function Navbar() {
                         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#344238] transition hover:bg-[#edf5e9] hover:text-[#078b43]"
                       >
                         <svg
-                          className="h-4 w-4"
+                          className="h-4 w-4 shrink-0"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -246,7 +250,7 @@ export default function Navbar() {
                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#c0392b] transition hover:bg-[#fff0ed] disabled:opacity-60"
                       >
                         <svg
-                          className="h-4 w-4"
+                          className="h-4 w-4 shrink-0"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -266,14 +270,14 @@ export default function Navbar() {
               <>
                 <Link
                   href="/signin"
-                  className="rounded-md border border-[#e3e9e1] px-3 py-2 text-xs font-semibold text-[#26362b] hover:bg-[#f2f7f0]"
+                  className="inline-flex min-h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-[#e3e9e1] px-2 py-2 text-[11px] font-semibold text-[#26362b] hover:bg-[#f2f7f0] sm:px-3 sm:text-xs"
                 >
                   সাইন ইন
                 </Link>
 
                 <Link
                   href="/signup"
-                  className="rounded-md bg-[#078b43] px-3 py-2 text-xs font-semibold text-white hover:bg-[#067638]"
+                  className="inline-flex min-h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-[#078b43] px-2 py-2 text-[11px] font-semibold text-white hover:bg-[#067638] sm:px-3 sm:text-xs"
                 >
                   সাইন আপ
                 </Link>
@@ -282,11 +286,12 @@ export default function Navbar() {
           </div>
         </div>
 
+        {/* Horizontally scrollable categories */}
         <nav
           aria-label="পণ্যের ক্যাটাগরি"
           className="border-t border-[#f0f2ed]"
         >
-          <div className="flex items-center gap-1 overflow-x-auto py-1 sm:gap-2">
+          <div className="flex min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain py-1 sm:gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {categories.map((category) => {
               const isActive = pathname === `/category/${category.slug}`;
 
@@ -295,7 +300,7 @@ export default function Navbar() {
                   key={category.slug}
                   href={`/category/${category.slug}`}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex shrink-0 items-center gap-1 rounded-md px-3 py-2 text-xs font-semibold transition ${
+                  className={`flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-2 text-[11px] font-semibold transition sm:px-3 sm:text-xs ${
                     isActive
                       ? "bg-[#078b43] text-white"
                       : "text-[#344238] hover:bg-[#edf5e9] hover:text-[#267747]"
@@ -310,8 +315,9 @@ export default function Navbar() {
         </nav>
       </div>
 
+      {/* Live price ticker */}
       <div
-        className="overflow-hidden border-t border-[#e9eee5] bg-[#f0f6ed] py-1.5"
+        className="w-full min-w-0 overflow-hidden border-t border-[#e9eee5] bg-[#f0f6ed] py-1.5"
         aria-label="সাম্প্রতিক পণ্যের দাম"
       >
         {tickerItems.length > 0 ? (
@@ -323,12 +329,14 @@ export default function Navbar() {
               return (
                 <div
                   key={`${item.slug || item.id || item.nameBn}-${index}`}
-                  className="flex shrink-0 items-center gap-1.5 px-4 text-xs"
+                  className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-[11px] sm:px-4 sm:text-xs"
                 >
                   <span aria-hidden="true">🌾</span>
+
                   <span className="font-medium text-[#344238]">
                     {item.nameBn}
                   </span>
+
                   <span className="font-semibold text-[#344238]">
                     {formatPrice(item.today)} টাকা/{getUnit(item.unit)}
                   </span>
@@ -348,13 +356,15 @@ export default function Navbar() {
                     </span>
                   )}
 
-                  <span className="ml-2 text-[#cbd8c7]">•</span>
+                  <span className="ml-1 text-[#cbd8c7]" aria-hidden="true">
+                    •
+                  </span>
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="px-4 text-center text-xs text-[#68756b]">
+          <p className="px-3 text-center text-[11px] text-[#68756b] sm:text-xs">
             পণ্যের দাম লোড হচ্ছে...
           </p>
         )}

@@ -11,11 +11,18 @@ if (!mongoUri) {
 const client = new MongoClient(mongoUri);
 const db = client.db();
 
-const appUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
+// Vercel URL অথবা BETTER_AUTH_URL অটোমেটিক ডিটেক্ট করবে এবং শেষের '/' মুছে ফেলবে
+const rawUrl =
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+const appUrl = rawUrl.replace(/\/$/, "");
 
 export const auth = betterAuth({
   appName: "Bazar Dor",
   baseURL: appUrl,
+  secret: process.env.BETTER_AUTH_SECRET,
   database: mongodbAdapter(db),
 
   emailAndPassword: {
@@ -43,9 +50,13 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google"],
+      trustedProviders: ["google", "github"],
     },
   },
 
-  trustedOrigins: [appUrl],
+  trustedOrigins: [
+    appUrl,
+    "http://localhost:3000",
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  ],
 });
