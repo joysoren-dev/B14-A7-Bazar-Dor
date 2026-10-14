@@ -8,10 +8,23 @@ if (!mongoUri) {
   throw new Error("MONGODB_URI is missing from .env");
 }
 
-const client = new MongoClient(mongoUri);
-const db = client.db();
+// Vercel সার্ভারলেস এনভায়রনমেন্টে কানেকশন ধরে রাখার জন্য গ্লোবাল ক্যাশ প্যাটার্ন
+let client;
+let db;
 
-// Vercel URL অথবা BETTER_AUTH_URL অটোমেটিক ডিটেক্ট করবে এবং শেষের '/' মুছে ফেলবে
+if (process.env.NODE_ENV === "development") {
+  if (!global._mongoClient) {
+    global._mongoClient = new MongoClient(mongoUri);
+    await global._mongoClient.connect();
+  }
+  client = global._mongoClient;
+  db = client.db();
+} else {
+  client = new MongoClient(mongoUri);
+  await client.connect();
+  db = client.db();
+}
+
 const rawUrl =
   process.env.BETTER_AUTH_URL ||
   process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
