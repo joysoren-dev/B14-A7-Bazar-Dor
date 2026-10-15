@@ -218,7 +218,7 @@ export default function SignupPage() {
             <div className="h-px flex-1 bg-[#e1e7df]" />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => handleSocialLogin("google")}
