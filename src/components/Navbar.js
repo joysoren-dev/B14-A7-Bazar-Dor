@@ -267,21 +267,21 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <>
+              <div className="flex flex-col sm:flex-row items-center gap-1.5 w-full">
                 <Link
                   href="/signin"
-                  className="inline-flex min-h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-[#e3e9e1] px-2 py-2 text-[11px] font-semibold text-[#26362b] hover:bg-[#f2f7f0] sm:px-3 sm:text-xs"
+                  className="inline-flex min-h-8 w-full sm:w-auto shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-[#e3e9e1] px-2.5 py-1.5 text-[11px] font-semibold text-[#26362b] hover:bg-[#f2f7f0] sm:px-3 sm:text-xs"
                 >
                   সাইন ইন
                 </Link>
 
                 <Link
                   href="/signup"
-                  className="inline-flex min-h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-[#078b43] px-2 py-2 text-[11px] font-semibold text-white hover:bg-[#067638] sm:px-3 sm:text-xs"
+                  className="inline-flex min-h-8 w-full sm:w-auto shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-[#078b43] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#067638] sm:px-3 sm:text-xs"
                 >
                   সাইন আপ
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>
